@@ -5,4 +5,5 @@ export default {
   ),
   btnSearch: document.querySelector('#search-form button[type="submit"]'),
   btnLoadMore: document.querySelector('.load-more'),
+  pictureContainer: document.querySelector('.gallery'),
 };
