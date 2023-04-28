@@ -12,6 +12,27 @@ let searchQuery = '';
 let page = 1;
 const perPage = 40;
 
+// Нескінченний скрол
+let options = {
+  root: null,
+  rootMargin: '300px',
+  threshold: 1.0,
+};
+let observer = new IntersectionObserver(onLoad, options);
+function onLoad(entries) {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      page += 1;
+      getPictures(searchQuery, page, perPage)
+        .then(data => {
+          renderPictureCard(data.hits);
+          SimpleLightbox.refresh();
+        })
+        .catch(error => console.log(error));
+    }
+  });
+}
+
 function onFormSearch(e) {
   e.preventDefault();
   searchQuery = e.currentTarget.elements.searchQuery.value.trim();
@@ -32,6 +53,7 @@ function onFormSearch(e) {
         );
       } else {
         renderPictureCard(data.hits);
+        observer.observe(refs.target);
         refs.btnLoadMore.hidden = false;
         Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
       }
@@ -54,25 +76,32 @@ function renderPictureCard(pictures) {
         views,
         comments,
         downloads,
-      }) => `<a class="gallery__link" href="${largeImageURL}" 
-      <div class="gallery" id="${id}">
-           <img class="gallery__img" src="${webformatURL}" alt="${tags}" loading="lazy" />
+      }) => `<a class="gallery__link" href="${largeImageURL}"data-lb-group="search-results"> 
+      <div class="gallery-wrapper" id="${id}">
+           <img class="gallery__img" src="${webformatURL}" alt="${tags}" loading="lazy"  />
             <div class="info">
-              <p class="info-item"><b>Likes</b>${likes}</p>
-              <p class="info-item"><b>Views</b>${views}</p>
-              <p class="info-item"><b>Comments</b>${comments}</p>
-              <p class="info-item"><b>Downloads</b>${downloads}</p>
+              <p class="info-item"><b>Likes</b> ${likes}</p>
+              <p class="info-item"><b>Views</b> ${views}</p>
+              <p class="info-item"><b>Comments</b> ${comments}</p>
+              <p class="info-item"><b>Downloads</b> ${downloads}</p>
             </div>
           </div>
           </a>`
     )
     .join('');
   refs.pictureContainer.insertAdjacentHTML('beforeend', markup);
+  const simpleLightBox = new SimpleLightbox('.gallery__link');
+
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
 }
-const simpleLightBox = new SimpleLightbox('.gallery__link', {
-  captionsData: 'alt',
-  captionDelay: 250,
-});
+
 function onBtnLoadMoreClick() {
   page += 1;
 
@@ -80,7 +109,6 @@ function onBtnLoadMoreClick() {
     .then(data => {
       renderPictureCard(data.hits);
 
-      simpleLightBox.refresh();
       const totalPages = Math.ceil(data.totalHits / perPage);
 
       if (page > totalPages) {
@@ -89,6 +117,7 @@ function onBtnLoadMoreClick() {
           "We're sorry, but you've reached the end of search results."
         );
       }
+      SimpleLightbox.refresh();
     })
 
     .catch(error => console.log(error));
