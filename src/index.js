@@ -19,14 +19,33 @@ let options = {
   threshold: 1.0,
 };
 let observer = new IntersectionObserver(onLoad, options);
+// function onLoad(entries) {
+//   entries.forEach(entry => {
+//     if (entry.isIntersecting) {
+//       page += 1;
+//       getPictures(searchQuery, page, perPage)
+//         .then(data => {
+//           renderPictureCard(data.hits);
+//           SimpleLightbox.refresh();
+//         })
+//         .catch(error => console.log(error));
+//     }
+//   });
+// }
+let allPicturesLoaded = false;
 function onLoad(entries) {
+  console.log(entries);
   entries.forEach(entry => {
-    if (entry.isIntersecting) {
+    if (entry.isIntersecting && !allPicturesLoaded) {
       page += 1;
       getPictures(searchQuery, page, perPage)
         .then(data => {
           renderPictureCard(data.hits);
           SimpleLightbox.refresh();
+          if (data.hits.length < perPage) {
+            allPicturesLoaded = true;
+            refs.btnLoadMore.hidden = true;
+          }
         })
         .catch(error => console.log(error));
     }
