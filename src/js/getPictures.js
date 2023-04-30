@@ -9,7 +9,7 @@ async function getPictures(searchQuery, page, perPage) {
   );
 
   const pictures = response.data;
-  console.log(pictures);
+
   return pictures;
 }
 export { getPictures };

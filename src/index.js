@@ -19,30 +19,20 @@ let options = {
   threshold: 1.0,
 };
 let observer = new IntersectionObserver(onLoad, options);
-// function onLoad(entries) {
-//   entries.forEach(entry => {
-//     if (entry.isIntersecting) {
-//       page += 1;
-//       getPictures(searchQuery, page, perPage)
-//         .then(data => {
-//           renderPictureCard(data.hits);
-//           SimpleLightbox.refresh();
-//         })
-//         .catch(error => console.log(error));
-//     }
-//   });
-// }
+
 let allPicturesLoaded = false;
+let totalHits = 0;
+
 function onLoad(entries) {
-  console.log(entries);
   entries.forEach(entry => {
-    if (entry.isIntersecting && !allPicturesLoaded) {
+    if (entry.isIntersecting && perPage < totalHits) {
       page += 1;
       getPictures(searchQuery, page, perPage)
         .then(data => {
           renderPictureCard(data.hits);
           SimpleLightbox.refresh();
-          if (data.hits.length < perPage) {
+          perPage += data.hits.length;
+          if (perPage >= totalHits) {
             allPicturesLoaded = true;
             refs.btnLoadMore.hidden = true;
           }
@@ -66,14 +56,14 @@ function onFormSearch(e) {
   }
   getPictures(searchQuery, page, perPage)
     .then(data => {
-      if (data.totalHits === 0) {
+      totalHits = data.totalHits;
+      if (totalHits === 0) {
         Notiflix.Notify.failure(
           'Sorry, there are no images matching your search query. Please try again.'
         );
       } else {
         renderPictureCard(data.hits);
         observer.observe(refs.target);
-        refs.btnLoadMore.hidden = false;
         Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
       }
     })
@@ -95,7 +85,7 @@ function renderPictureCard(pictures) {
         views,
         comments,
         downloads,
-      }) => `<a class="gallery__link" href="${largeImageURL}"data-lb-group="search-results"> 
+      }) => `<a class="gallery__link" href="${largeImageURL}"data-lb-group="search-results">
       <div class="gallery-wrapper" id="${id}">
            <img class="gallery__img" src="${webformatURL}" alt="${tags}" loading="lazy"  />
             <div class="info">
