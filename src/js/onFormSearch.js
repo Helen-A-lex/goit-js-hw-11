@@ -12,7 +12,7 @@ let options = {
   threshold: 1.0,
 };
 let observer = new IntersectionObserver(onLoad, options);
-
+let totalHits = 0;
 export function onFormSearch(e) {
   e.preventDefault();
   searchQuery = e.currentTarget.elements.searchQuery.value.trim();
